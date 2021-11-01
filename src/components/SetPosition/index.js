@@ -84,7 +84,7 @@ const SetPosition = props => {
 
   return (
     <div>
-      <div style={{ position: 'relative', border: '2px dashed black', width: 'fit-content', margin: 10 }} onClick={setCoordie}>
+      {img ? <div style={{ position: 'relative', border: '2px dashed black', width: 'fit-content', margin: 10 }} onClick={setCoordie}>
         <img id="imgTest" src={img} alt="img" />
         {
           position.map((item, index) => {
@@ -115,14 +115,14 @@ const SetPosition = props => {
               }} />
           })
         }
-      </div>
+      </div> : <h2>Upload image to get position !</h2>}
       <div style={{ paddingInline: 20 }}>
         <div style={{ marginTop: 10, marginBottom: 2 }}>style:</div> <Input onChange={(e) => {
           const { value } = e.target;
           setSaveStyle(value);
         }} style={{ marginTop: 5 }} />
 
-        <div style={{ marginTop: 10, marginBottom: 2 }}>template: </div><Input onChange={(e) => {
+        <div style={{ marginTop: 10, marginBottom: 2 }}>template - parameters: leftValue, topValue, index</div><Input onChange={(e) => {
           const { value } = e.target;
           setInputSave(value);
         }} style={{ marginTop: 5 }} />
@@ -135,6 +135,10 @@ const SetPosition = props => {
           })
           setOutput(str);
         }}>Export</Button>
+        <Button onClick={() => {
+          setPosition([]);
+          setOutput('');
+        }}>Delete all position</Button>
         <UploadImage getImg={setImg} />
       </div>
     </div>
