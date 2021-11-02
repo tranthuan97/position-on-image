@@ -6,7 +6,7 @@ const { TextArea } = Input;
 const SetPosition = props => {
 
   const [img, setImg] = React.useState('')
-  const [saveStyle, setSaveStyle] = React.useState('');
+  const [saveStyle, setSaveStyle] = React.useState('position: "absolute", transform: "translate(-50%, -50%)", width: "15px", height: "15px", borderRadius: "50%", border: "1px solid red", background: "white"');
   const [inputSave, setInputSave] = React.useState('');
   const [output, setOutput] = React.useState('');
   const [position, setPosition] = React.useState([]);
@@ -97,27 +97,21 @@ const SetPosition = props => {
               arr = JSON.parse(`[{${joinString}}]`)
             } catch (error) {
             }
+
             return <div
               id={item.id}
               key={index}
               onMouseDownCapture={() => dragElement(document.getElementById(item.id))}
               style={{
-                position: 'absolute',
-                transform: "translate(-50%, -50%)",
                 top: item.top,
                 left: item.left,
-                width: "15px",
-                height: "15px",
-                borderRadius: "50%",
-                border: "1px solid red",
-                background: 'white',
                 ...arr[0]
               }} />
           })
         }
       </div> : <h2>Upload image to get position !</h2>}
       <div style={{ paddingInline: 20 }}>
-        <div style={{ marginTop: 10, marginBottom: 2 }}>style:</div> <Input onChange={(e) => {
+        <div style={{ marginTop: 10, marginBottom: 2 }}>style:</div> <Input defaultValue='position: "absolute", transform: "translate(-50%, -50%)", width: "15px", height: "15px", borderRadius: "50%", border: "1px solid red", background: "white"' onChange={(e) => {
           const { value } = e.target;
           setSaveStyle(value);
         }} style={{ marginTop: 5 }} />
