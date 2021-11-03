@@ -11,3 +11,5 @@ coords.split(',').forEach((item, index, array) => {
     // console.log(`<div style=" position: absolute; top: ${top - 14}px; left: ${left - 16}px; "><input id='${index / 2}' /></div>`);
   };
 });
+
+// <div style=" position: absolute; {top}; {left}; "><input id='{index}' /></div>

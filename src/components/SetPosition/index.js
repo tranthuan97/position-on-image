@@ -7,9 +7,12 @@ const SetPosition = props => {
 
   const [img, setImg] = React.useState('')
   const [saveStyle, setSaveStyle] = React.useState('position: "absolute", transform: "translate(-50%, -50%)", width: "15px", height: "15px", borderRadius: "50%", border: "1px solid red", background: "white"');
-  const [inputSave, setInputSave] = React.useState('');
+  const [inputSave, setInputSave] = React.useState(`<div style=" position: absolute; {top}; {left}; "><input id='{index}' /></div>`);
   const [output, setOutput] = React.useState('');
   const [position, setPosition] = React.useState([]);
+  const targetItemRef = React.useRef(null);
+  const positionRef = React.useRef(null);
+  positionRef.current = position;
   var styleTop = 0
   var styleLeft = 0
   var dragId = 0;
@@ -80,6 +83,36 @@ const SetPosition = props => {
     setPosition([...position])
   }
 
+  React.useEffect(() => {
+    window.addEventListener('keydown', (e) => {
+      const { key } = e;
+      if (targetItemRef.current === null) return;
+      switch (key) {
+        case 'ArrowRight':
+          e.preventDefault();
+          positionRef.current[targetItemRef.current].left += 1
+          setPosition(Array.from(positionRef.current))
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          positionRef.current[targetItemRef.current].left -= 1
+          setPosition(Array.from(positionRef.current))
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          positionRef.current[targetItemRef.current].top -= 1
+          setPosition(Array.from(positionRef.current))
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          positionRef.current[targetItemRef.current].top += 1
+          setPosition(Array.from(positionRef.current))
+          break;
+        default:
+          break;
+      }
+    });
+  }, [])
   // const str = `position: "absolute", width: "30px", height: "30px", borderRadius: "50%", border: "1px dashed gray", transform: "translate(-50%, -50%)"`
 
   return (
@@ -101,7 +134,10 @@ const SetPosition = props => {
             return <div
               id={item.id}
               key={index}
-              onMouseDownCapture={() => dragElement(document.getElementById(item.id))}
+              onMouseDownCapture={() => {
+                dragElement(document.getElementById(item.id));
+                targetItemRef.current = item.id
+              }}
               style={{
                 top: item.top,
                 left: item.left,
@@ -111,21 +147,24 @@ const SetPosition = props => {
         }
       </div> : <h2>Upload image to get position !</h2>}
       <div style={{ paddingInline: 20 }}>
-        <div style={{ marginTop: 10, marginBottom: 2 }}>style:</div> <Input defaultValue='position: "absolute", transform: "translate(-50%, -50%)", width: "15px", height: "15px", borderRadius: "50%", border: "1px solid red", background: "white"' onChange={(e) => {
+        <div style={{ marginTop: 10, marginBottom: 2 }}>style:</div>
+        <Input style={{ marginTop: 5, color: 'blue' }} defaultValue='position: "absolute", transform: "translate(-50%, -50%)", width: "15px", height: "15px", borderRadius: "50%", border: "1px solid red", background: "white"' onChange={(e) => {
           const { value } = e.target;
           setSaveStyle(value);
-        }} style={{ marginTop: 5 }} />
-
-        <div style={{ marginTop: 10, marginBottom: 2 }}>template - parameters: leftValue, topValue, index</div><Input onChange={(e) => {
+        }} />
+        <div style={{ marginTop: 10, marginBottom: 2 }}>template - parameters: {`{top}`}, {`{left}`}, {`{index}`}</div>
+        <Input value={inputSave} style={{ marginTop: 5, color: 'green' }} onChange={(e) => {
           const { value } = e.target;
           setInputSave(value);
-        }} style={{ marginTop: 5 }} />
+        }} />
         <div style={{ marginTop: 10, marginBottom: 2 }}>output: </div>
-        <TextArea value={output} rows={4} />
+        <TextArea style={{ color: 'green' }} value={output} rows={10} />
         <Button onClick={() => {
           let str = ''
           position.forEach((item, index) => {
-            str += `${inputSave.replace('topValue', item.top).replace('leftValue', item.left).replace('index', index)}\n`;
+            str += `${inputSave.replace('{top}', `top: ${item.top}px`)
+              .replace('{left}', `left: ${item.left}px`)
+              .replace('{index}', index)}\n`;
           })
           setOutput(str);
         }}>Export</Button>
