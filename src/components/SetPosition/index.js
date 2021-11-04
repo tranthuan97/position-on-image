@@ -64,12 +64,13 @@ const SetPosition = () => {
     /* stop moving when mouse button is released:*/
     document.onmouseup = null;
     document.onmousemove = null;
+    if (!styleTop && !styleLeft) return;
 
     const parentWidth = document.getElementById('imgTest').offsetWidth;
     const parentHeight = document.getElementById('imgTest').offsetHeight;
 
-    position[dragId].top = styleTop < 0 ? 0 : styleTop >= parentHeight ? parentHeight : styleTop;
-    position[dragId].left = styleLeft < 0 ? 0 : styleLeft >= parentWidth ? parentWidth : styleLeft;
+    position.find(x => x.id === parseInt(dragId)).top = styleTop < 0 ? 0 : styleTop >= parentHeight ? parentHeight : styleTop;
+    position.find(x => x.id === parseInt(dragId)).left = styleLeft < 0 ? 0 : styleLeft >= parentWidth ? parentWidth : styleLeft;
 
     document.getElementById(dragId).style.top = (styleTop < 0 ? 0 : styleTop >= parentHeight ? parentHeight : styleTop) + 'px'
     document.getElementById(dragId).style.left = (styleLeft < 0 ? 0 : styleLeft >= parentWidth ? parentWidth : styleLeft) + 'px'
@@ -87,16 +88,17 @@ const SetPosition = () => {
     const left = mouseX - x0;
     const top = mouseY - y0
     if (target.tagName === 'DIV') return ''
-
-    position.push({ top, left, id: position.length });
+    const id = position[position.length - 1]?.id ?? 0;
+    targetItemRef.current = id + 1;
+    position.push({ top, left, id: id + 1 });
     setPosition([...position])
   }
 
   const setTargetPosition = (e, pRef, tRef, destination, inCrease) => {
     e.preventDefault();
     inCrease ?
-      pRef.current[tRef.current][destination] += 1 :
-      pRef.current[tRef.current][destination] -= 1
+      pRef.current.find(x => x.id === tRef.current)[destination] += 1 :
+      pRef.current.find(x => x.id === tRef.current)[destination] -= 1
     setPosition(Array.from(pRef.current))
   }
 
@@ -132,11 +134,10 @@ const SetPosition = () => {
       arr = JSON.parse(`[{${joinString}}]`)
     } catch (error) {
     }
-
     return <div
       id={item.id}
       key={index}
-      onMouseDownCapture={() => {
+      onMouseDownCapture={(e) => {
         dragElement(document.getElementById(item.id));
         targetItemRef.current = item.id
       }}
@@ -164,6 +165,9 @@ const SetPosition = () => {
         case 'ArrowDown':
           setTargetPosition(e, positionRef, targetItemRef, 'top', true)
           break;
+        case 'Backspace':
+          setPosition(Array.from(positionRef.current.filter(x => x.id !== targetItemRef.current)))
+          break;
         default:
           break;
       }
@@ -176,7 +180,7 @@ const SetPosition = () => {
         img ?
           <div
             onClick={setCoordinates}
-            style={{ position: 'relative', border: '2px dashed black', width: 'fit-content', margin: 10 }}>
+            style={{ position: 'relative', border: '2px dashed black', width: 'fit-content', margin: 20 }}>
             <img id="imgTest" src={img} alt="img" />
             {position.map(renderPosition)}
           </div> :
