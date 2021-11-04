@@ -1,15 +1,20 @@
-import { Button, Input } from 'antd';
 import React from 'react';
+import { Button, Input } from 'antd';
 import UploadImage from '../UploadImage';
+import './styles.css';
+
 const { TextArea } = Input;
 
-const SetPosition = props => {
+const inputStylesDedault = 'position: "absolute", transform: "translate(-50%, -50%)", width: "30px", height: "30px", borderRadius: "50%", border: "1px solid red", background: "white"';
+const saveStyleDefault = 'position: "absolute", transform: "translate(-50%, -50%)", width: "30px", height: "30px", borderRadius: "50%", border: "1px solid red", background: "white"';
+const inputSaveDefault = `<div style=" position: absolute; {top}; {left}; "><input id='{index}' /></div>`;
 
-  const [img, setImg] = React.useState('')
-  const [saveStyle, setSaveStyle] = React.useState('position: "absolute", transform: "translate(-50%, -50%)", width: "15px", height: "15px", borderRadius: "50%", border: "1px solid red", background: "white"');
-  const [inputSave, setInputSave] = React.useState(`<div style=" position: absolute; {top}; {left}; "><input id='{index}' /></div>`);
-  const [output, setOutput] = React.useState('');
+const SetPosition = () => {
+  const [saveStyle, setSaveStyle] = React.useState(saveStyleDefault);
+  const [inputSave, setInputSave] = React.useState(inputSaveDefault);
   const [position, setPosition] = React.useState([]);
+  const [output, setOutput] = React.useState('');
+  const [img, setImg] = React.useState('')
   const targetItemRef = React.useRef(null);
   const positionRef = React.useRef(null);
   positionRef.current = position;
@@ -49,6 +54,7 @@ const SetPosition = props => {
       // set the element's new position:
       elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
       elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+
       styleTop = (elmnt.offsetTop - pos2);
       styleLeft = (elmnt.offsetLeft - pos1);
     }
@@ -58,17 +64,20 @@ const SetPosition = props => {
     /* stop moving when mouse button is released:*/
     document.onmouseup = null;
     document.onmousemove = null;
+
     const parentWidth = document.getElementById('imgTest').offsetWidth;
     const parentHeight = document.getElementById('imgTest').offsetHeight;
-    document.getElementById(dragId).style.top = (styleTop < 0 ? 0 : styleTop >= parentHeight ? parentHeight : styleTop) + 'px'
-    document.getElementById(dragId).style.left = (styleLeft < 0 ? 0 : styleLeft >= parentWidth ? parentWidth : styleLeft) + 'px'
+
     position[dragId].top = styleTop < 0 ? 0 : styleTop >= parentHeight ? parentHeight : styleTop;
     position[dragId].left = styleLeft < 0 ? 0 : styleLeft >= parentWidth ? parentWidth : styleLeft;
+
+    document.getElementById(dragId).style.top = (styleTop < 0 ? 0 : styleTop >= parentHeight ? parentHeight : styleTop) + 'px'
+    document.getElementById(dragId).style.left = (styleLeft < 0 ? 0 : styleLeft >= parentWidth ? parentWidth : styleLeft) + 'px'
 
     setPosition(Array.from(position))
   }
 
-  const setCoordie = (e) => {
+  const setCoordinates = (e) => {
     const { clientX, clientY, target } = e
     const x0 = target.x;
     const y0 = target.y;
@@ -83,103 +92,136 @@ const SetPosition = props => {
     setPosition([...position])
   }
 
+  const setTargetPosition = (e, pRef, tRef, destination, inCrease) => {
+    e.preventDefault();
+    inCrease ?
+      pRef.current[tRef.current][destination] += 1 :
+      pRef.current[tRef.current][destination] -= 1
+    setPosition(Array.from(pRef.current))
+  }
+
+  const disableKeyDown = (e) => {
+    if (targetItemRef.current !== null) {
+      e.preventDefault()
+    }
+  }
+
+  window.addEventListener('click', (e) => {
+    if (!e.target.id) {
+      targetItemRef.current = null;
+    }
+  })
+
+  const exportScript = () => {
+    let str = ''
+    position.forEach((item, index) => {
+      str += `${inputSave.replace('{top}', `top: ${item.top}px`)
+        .replace('{left}', `left: ${item.left}px`)
+        .replace('{index}', index)}\n`;
+    })
+    setOutput(str);
+  }
+
+  const renderPosition = (item, index) => {
+    let joinString = '';
+    saveStyle && saveStyle.split(/(\w+:)/g).forEach((element, index) => {
+      joinString += index % 2 !== 0 ? `"${element.replace(':', '')}":` : element;
+    })
+    let arr = [{}];
+    try {
+      arr = JSON.parse(`[{${joinString}}]`)
+    } catch (error) {
+    }
+
+    return <div
+      id={item.id}
+      key={index}
+      onMouseDownCapture={() => {
+        dragElement(document.getElementById(item.id));
+        targetItemRef.current = item.id
+      }}
+      style={{
+        top: item.top,
+        left: item.left,
+        ...arr[0]
+      }} />
+  }
+
   React.useEffect(() => {
     window.addEventListener('keydown', (e) => {
       const { key } = e;
       if (targetItemRef.current === null) return;
       switch (key) {
         case 'ArrowRight':
-          e.preventDefault();
-          positionRef.current[targetItemRef.current].left += 1
-          setPosition(Array.from(positionRef.current))
+          setTargetPosition(e, positionRef, targetItemRef, 'left', true)
           break;
         case 'ArrowLeft':
-          e.preventDefault();
-          positionRef.current[targetItemRef.current].left -= 1
-          setPosition(Array.from(positionRef.current))
+          setTargetPosition(e, positionRef, targetItemRef, 'left', false)
           break;
         case 'ArrowUp':
-          e.preventDefault();
-          positionRef.current[targetItemRef.current].top -= 1
-          setPosition(Array.from(positionRef.current))
+          setTargetPosition(e, positionRef, targetItemRef, 'top', false)
           break;
         case 'ArrowDown':
-          e.preventDefault();
-          positionRef.current[targetItemRef.current].top += 1
-          setPosition(Array.from(positionRef.current))
+          setTargetPosition(e, positionRef, targetItemRef, 'top', true)
           break;
         default:
           break;
       }
     });
   }, [])
-  // const str = `position: "absolute", width: "30px", height: "30px", borderRadius: "50%", border: "1px dashed gray", transform: "translate(-50%, -50%)"`
 
   return (
     <div>
-      {img ? <div style={{ position: 'relative', border: '2px dashed black', width: 'fit-content', margin: 10 }} onClick={setCoordie}>
-        <img id="imgTest" src={img} alt="img" />
-        {
-          position.map((item, index) => {
-            let joinString = '';
-            saveStyle && saveStyle.split(/(\w+:)/g).forEach((element, index) => {
-              joinString += index % 2 !== 0 ? `"${element.replace(':', '')}":` : element;
-            })
-            let arr = [{}];
-            try {
-              arr = JSON.parse(`[{${joinString}}]`)
-            } catch (error) {
-            }
-
-            return <div
-              id={item.id}
-              key={index}
-              onMouseDownCapture={() => {
-                dragElement(document.getElementById(item.id));
-                targetItemRef.current = item.id
-              }}
-              style={{
-                top: item.top,
-                left: item.left,
-                ...arr[0]
-              }} />
-          })
-        }
-      </div> : <h2>Upload image to get position !</h2>}
+      {
+        img ?
+          <div
+            onClick={setCoordinates}
+            style={{ position: 'relative', border: '2px dashed black', width: 'fit-content', margin: 10 }}>
+            <img id="imgTest" src={img} alt="img" />
+            {position.map(renderPosition)}
+          </div> :
+          <h2>Upload image to get position !</h2>
+      }
       <div style={{ paddingInline: 20 }}>
         <div style={{ marginTop: 10, marginBottom: 2 }}>style:</div>
-        <Input style={{ marginTop: 5, color: 'blue' }} defaultValue='position: "absolute", transform: "translate(-50%, -50%)", width: "15px", height: "15px", borderRadius: "50%", border: "1px solid red", background: "white"' onChange={(e) => {
-          const { value } = e.target;
-          setSaveStyle(value);
-        }} />
-        <div style={{ marginTop: 10, marginBottom: 2 }}>template - parameters: {`{top}`}, {`{left}`}, {`{index}`}</div>
-        <Input value={inputSave} style={{ marginTop: 5, color: 'green' }} onChange={(e) => {
-          const { value } = e.target;
-          setInputSave(value);
-        }} />
+        <Input
+          className="fontSizeInput"
+          onKeyDown={disableKeyDown}
+          style={{ marginTop: 5, color: 'blue' }}
+          defaultValue={inputStylesDedault} onChange={(e) => setSaveStyle(e.target.value)} />
+
+        <div style={{ marginTop: 10, marginBottom: 2 }}>
+          template - parameters: {`{top}`}; {`{left}`} {`{index}`}
+        </div>
+
+        <Input
+          value={inputSave}
+          className="fontSizeInput"
+          onKeyDown={disableKeyDown}
+          style={{ marginTop: 5, color: 'green' }}
+          onChange={(e) => setInputSave(e.target.value)} />
+
         <div style={{ marginTop: 10, marginBottom: 2 }}>output: </div>
-        <TextArea style={{ color: 'green' }} value={output} rows={10} />
-        <Button onClick={() => {
-          let str = ''
-          position.forEach((item, index) => {
-            str += `${inputSave.replace('{top}', `top: ${item.top}px`)
-              .replace('{left}', `left: ${item.left}px`)
-              .replace('{index}', index)}\n`;
-          })
-          setOutput(str);
-        }}>Export</Button>
-        <Button onClick={() => {
-          setPosition([]);
-          setOutput('');
-        }}>Delete all position</Button>
+
+        <TextArea
+          rows={10}
+          value={output}
+          style={{ color: 'green' }}
+          onKeyDown={disableKeyDown}
+        />
+        <Button onClick={exportScript}>Export</Button>
+
+        <Button
+          onClick={() => {
+            setOutput('');
+            setPosition([]);
+          }}
+        >Delete all position</Button>
+
         <UploadImage getImg={setImg} />
       </div>
     </div>
   );
-};
-
-SetPosition.propTypes = {
-
 };
 
 export default SetPosition;
